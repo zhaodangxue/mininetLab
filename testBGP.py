@@ -148,8 +148,8 @@ def getGateway(hostname):
     return gw
 def main():
     #清除之前的实验环境
-    os.system("rm -f /tmp/*.api")
-    os.system("rm -f /tmp/*.interface")
+    os.system("rm -f /tmp/r*.api")
+    os.system("rm -f /tmp/r*.interface")
     os.system("rm -f /tmp/bgpd1.log")
     os.system("rm -f /tmp/bgpd2.log")
     os.system("rm -f /tmp/r1ospfd.log")
