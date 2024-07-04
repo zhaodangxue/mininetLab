@@ -88,8 +88,6 @@ def main():
     os.system("rm -f /tmp/r*.api")
     os.system("rm -f /tmp/r*.interface")
     os.system("rm -f /tmp/r*.log")
-    os.system("rm -f /tmp/*.log")
-    os.system("rm -f /tmp/*.pid")
     os.system("mn -c >/dev/null 2>&1")
     os.system("killall -9 zebra bgpd  > /dev/null 2>&1")
     topo = SpineLeafTopo()
