@@ -87,6 +87,7 @@ def startRouting(router):
     router.waitOutput()
 def main():
     "Create and test a spine-leaf network"
+    filename = "data/tcp_send_h1self.log"
     os.system("rm -f /tmp/r*.api")
     os.system("rm -f /tmp/r*.interface")
     os.system("rm -f /tmp/r*.log")
@@ -110,7 +111,8 @@ def main():
     info("*** Running iperf client on h1  ->10.1.1.100\n")
     result = h1.cmd('iperf -c 10.1.1.100 -t 10')
     info(result)
-    CLI( net )
+    with open(filename, "a") as f:
+        f.write(result)
     net.stop()
     os.system("killall -9 zebra bgpd")
 if __name__ == '__main__':

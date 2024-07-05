@@ -80,14 +80,6 @@ class SpineLeafTopo(Topo):
         self.addLink('r6','h4',bw = 1000)
         self.addLink('r3','h4',intfName2='h4-eth2',params2={ 'ip' :'10.4.1.100/24'},bw = 1000)
         return;
-def measure_route_table_size(net):
-     r1 = net.switches[0]
-     r3 = net.switches[2]
-     r1_route_table_size = len(r1.cmd('ip route').strip().split('\n'))
-     r3_route_table_size = len(r3.cmd('ip route').strip().split('\n'))
-     log("r1 route table size: %d" % r1_route_table_size)
-     log("r3 route table size: %d" % r3_route_table_size)
-     return r1_route_table_size
 def startRouting(router):
     router.cmd('zebra -f spine-leaf/%szebra.conf -d -z /tmp/%szebra.api -i /tmp/%szebra.interface' % (router.name, router.name, router.name))
     router.waitOutput()
@@ -95,6 +87,7 @@ def startRouting(router):
     router.waitOutput()
 def main():
     "Create and test a spine-leaf network"
+    filename = "data/udp_100Mbps.log"
     os.system("rm -f /tmp/r*.api")
     os.system("rm -f /tmp/r*.interface")
     os.system("rm -f /tmp/r*.log")
@@ -107,31 +100,6 @@ def main():
         router.cmd('sysctl -w net.ipv4.ip_forward=1')
         startRouting(router)
     time.sleep(15)
-    # measure_route_table_size(net)
-    # net.delLinkBetween(net.switches[0], net.switches[2])
-    # time.sleep(3)
-    # measure_route_table_size(net)
-    # h1 = net.getNodeByName('h1')
-    # h2 = net.getNodeByName('h2')
-    # udp
-    # 启动iperf服务器
-    # info("*** Starting iperf server on h1\n")
-    # h1.cmd('iperf -u -s &')
-
-    # 启动iperf客户端
-    # info("*** Running iperf client on h2\n")
-    # result = h2.cmd('iperf -c 10.1.1.100 -u -b 5M -t 10')
-    # info(result)
-
-    #tcp
-    # 启动iperf服务器
-    # info("*** Starting iperf server on h1\n")
-    # h1.cmd('iperf -s &')
-
-    # 启动iperf客户端
-    # info("*** Running iperf client on h2\n")
-    # result = h2.cmd('iperf -c 10.1.1.100 -b 5M -t 10')
-    # info(result)
     h1 = net.getNodeByName('h1')
     h4 = net.getNodeByName('h4')
     # 启动iperf服务器,tcp
@@ -141,9 +109,8 @@ def main():
     info("*** Running iperf client on h1\n")
     result = h1.cmd('iperf -u -c 10.4.4.100 -b 100M -t 10')
     info(result)
-    CLI( net )
-    # os.system("h1 iperf -s &")
-    # os.system("h2 iperf -c 10.1.1.100")
+    with open(filename, "a") as f:
+        f.write(result)
     net.stop()
     os.system("killall -9 zebra bgpd")
 if __name__ == '__main__':

@@ -106,6 +106,7 @@ def measure_route_table_size(net):
      return r1_route_table_size, r2_route_table_size, r3_route_table_size, r4_route_table_size, r5_route_table_size, r6_route_table_size
 def main():
     "Create and test a spine-leaf network"
+    filename = "data/reconnected.log"
     os.system("rm -f /tmp/r*.api")
     os.system("rm -f /tmp/r*.interface")
     os.system("rm -f /tmp/r*.log")
@@ -134,7 +135,9 @@ def main():
         if r1_size == 21 and r2_size == 21 and r3_size == 21 and r4_size == 21 and r5_size == 21 and r6_size == 21:
             break
     log("Routing protocols converged in %d seconds" % time_total)
-    CLI( net )
+    str = "Routing protocols converged in %d seconds" % time_total
+    with open(filename, 'a') as f:
+        f.write(str)
     net.stop()
     os.system("killall -9 zebra bgpd")
 if __name__ == '__main__':
