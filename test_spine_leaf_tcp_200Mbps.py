@@ -111,7 +111,6 @@ def main():
     info(result)
     with open(filename,'a') as f:
         f.write(result)
-    time.sleep(15)
     net.stop()
     os.system("killall -9 zebra bgpd")
 if __name__ == '__main__':
