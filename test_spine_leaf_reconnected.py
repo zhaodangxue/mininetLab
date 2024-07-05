@@ -129,8 +129,8 @@ def main():
     time_total = 0
     while True :
         r1_size, r2_size, r3_size, r4_size, r5_size, r6_size = measure_route_table_size(net)
-        time.sleep(1)
-        time_total += 1
+        time.sleep(0.5)
+        time_total += 0.5
         if r1_size == 21 and r2_size == 21 and r3_size == 21 and r4_size == 21 and r5_size == 21 and r6_size == 21:
             break
     log("Routing protocols converged in %d seconds" % time_total)
