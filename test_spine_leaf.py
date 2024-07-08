@@ -79,9 +79,9 @@ class SpineLeafTopo(Topo):
         self.addLink('r3','h4',intfName2='h4-eth2',params2={ 'ip' :'10.4.1.100/24'})
         return;
 def startRouting(router):
-    router.cmd('zebra -f spine-leaf/%szebra.conf -d -z /tmp/%szebra.api -i /tmp/%szebra.interface' % (router.name, router.name, router.name))
+    router.cmd('zebra -f spine-leaf-5/%szebra.conf -d -z /tmp/%szebra.api -i /tmp/%szebra.interface' % (router.name, router.name, router.name))
     router.waitOutput()
-    router.cmd('bgpd -f spine-leaf/%sbgpd.conf -d -z /tmp/%szebra.api -i /tmp/%sbgpd.interface' % (router.name, router.name, router.name))
+    router.cmd('bgpd -f spine-leaf-5/%sbgpd.conf -d -z /tmp/%szebra.api -i /tmp/%sbgpd.interface' % (router.name, router.name, router.name))
     router.waitOutput()
 def main():
     "Create and test a spine-leaf network"

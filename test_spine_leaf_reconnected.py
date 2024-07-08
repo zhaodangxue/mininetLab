@@ -1,3 +1,4 @@
+import argparse
 from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.log import lg, info, setLogLevel
@@ -21,7 +22,8 @@ import time
 #                |      |            |      |
 #               h1     h2            h3     h4
 #除此之外,h1还与leaf2连接，h2还与leaf3连接，h3还与leaf4连接，h4还与leaf1连接,spine层应该与leaf层全连接，这里展示不了。
-#这个脚本是为了测试spine-leaf网络在某些链路断开后，再次连接后的路由收敛时间，经过测试，最终收敛后每个router的路由表大小为21
+#这个脚本是为了测试spine-leaf网络在某些链路断开后，再次连接后的路由收敛时间，经过测试，最终收敛后每个router的路由表大小为21，我们需要给出advertise时间参数（这里的输入参数为-a，一共三种选择：5，10，15）
+global_advertise = 5
 def log(s, col="green"):
     print (T.colored(s, col))
 
@@ -80,9 +82,9 @@ class SpineLeafTopo(Topo):
         self.addLink('r3','h4',intfName2='h4-eth2',params2={ 'ip' :'10.4.1.100/24'})
         return;
 def startRouting(router):
-    router.cmd('zebra -f spine-leaf/%szebra.conf -d -z /tmp/%szebra.api -i /tmp/%szebra.interface' % (router.name, router.name, router.name))
+    router.cmd('zebra -f spine-leaf-%d/%szebra.conf -d -z /tmp/%szebra.api -i /tmp/%szebra.interface' % (global_advertise,router.name, router.name, router.name))
     router.waitOutput()
-    router.cmd('bgpd -f spine-leaf/%sbgpd.conf -d -z /tmp/%szebra.api -i /tmp/%sbgpd.interface' % (router.name, router.name, router.name))
+    router.cmd('bgpd -f spine-leaf-%d/%sbgpd.conf -d -z /tmp/%szebra.api -i /tmp/%sbgpd.interface' % (global_advertise,router.name, router.name, router.name))
     router.waitOutput()
 def measure_route_table_size(net):
      r1 = net.switches[0]
@@ -107,6 +109,11 @@ def measure_route_table_size(net):
 def main():
     "Create and test a spine-leaf network"
     filename = "data/reconnected.log"
+    parser = argparse.ArgumentParser(description="Test spine-leaf network")
+    parser.add_argument('-a','--advertise', help='Advertisement time', type=int, default=5)
+    args = parser.parse_args()
+    global global_advertise
+    global_advertise = args.advertise
     os.system("rm -f /tmp/r*.api")
     os.system("rm -f /tmp/r*.interface")
     os.system("rm -f /tmp/r*.log")
@@ -135,7 +142,7 @@ def main():
         if r1_size == 21 and r2_size == 21 and r3_size == 21 and r4_size == 21 and r5_size == 21 and r6_size == 21:
             break
     log("Routing protocols converged in %d seconds" % time_total)
-    str = "Routing protocols converged in %d seconds" % time_total
+    str = "advertise time: %d, reconnected time: %d\n" % (global_advertise, time_total)
     with open(filename, 'a') as f:
         f.write(str)
     net.stop()

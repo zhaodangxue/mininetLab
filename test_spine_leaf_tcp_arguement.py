@@ -15,6 +15,7 @@ import sys
 import os
 import termcolor as T
 import time
+import argparse
 #这个mininet实验的简单拓扑图,两个spine，四个leaf，以及四个用于连接的host节点
 #                spine1(r1)         spine2(r2)
 #                /    \              /    \
@@ -22,7 +23,8 @@ import time
 #                |      |            |      |
 #               h1     h2            h3     h4
 #除此之外,h1还与leaf2连接，h2还与leaf3连接，h3还与leaf4连接，h4还与leaf1连接,spine层应该与leaf层全连接，这里展示不了。
-#这个脚本是用来测试spine-leaf网络的udp性能，h1发送udp包给h4，h4接收udp包，链路带宽为1Gbps，按iperf配置运行udp，以带宽速率1000M(1Gbps)发送udp包10s
+#这个脚本是为了测试spine-leaf网络的tcp性能，链路带宽为bw(输入参数为-b)，按iperf默认配置运行tcp发包10s
+global_bw = 1000
 def log(s, col="green"):
     print (T.colored(s, col))
 
@@ -55,6 +57,7 @@ class Router(Switch):
 class SpineLeafTopo(Topo):
     def __init__(self):
         # Add default members to class.
+        log("global_bw: %d" % global_bw)
         super(SpineLeafTopo, self ).__init__()
         routers = []
         hosts = []
@@ -66,28 +69,33 @@ class SpineLeafTopo(Topo):
         # r3，r4,r5,r6两两没有连接
         for i in range(2):
             for j in range(2, 6):
-                self.addLink("r%d" % (i+1), "r%d" % (j+1),bw=1000)
+                self.addLink("r%d" % (i+1), "r%d" % (j+1),bw=global_bw)
         h1 = self.addHost('h1',ip = '10.1.1.100/24', defaultRoute='via 10.1.1.10')
         h2 = self.addHost('h2',ip = '10.2.2.100/24', defaultRoute='via 10.2.2.20')
         h3 = self.addHost('h3',ip = '10.3.3.100/24', defaultRoute='via 10.3.3.30')
         h4 = self.addHost('h4',ip = '10.4.4.100/24', defaultRoute='via 10.4.4.40')
-        self.addLink('r3','h1',bw = 1000)
-        self.addLink('r4','h1',intfName2='h1-eth2',params2={ 'ip' :'10.1.2.100/24'},bw = 1000)
-        self.addLink('r4','h2',bw = 1000)
-        self.addLink('r5','h2',intfName2='h2-eth2',params2={ 'ip' :'10.2.3.100/24'},bw = 1000)
-        self.addLink('r5','h3',bw = 1000)
-        self.addLink('r6','h3',intfName2='h3-eth2',params2={ 'ip' :'10.3.4.100/24'},bw = 1000)
-        self.addLink('r6','h4',bw = 1000)
-        self.addLink('r3','h4',intfName2='h4-eth2',params2={ 'ip' :'10.4.1.100/24'},bw = 1000)
-        return;
+        self.addLink('r3','h1',bw = global_bw)
+        self.addLink('r4','h1',intfName2='h1-eth2',params2={ 'ip' :'10.1.2.100/24'},bw = global_bw)
+        self.addLink('r4','h2',bw = global_bw)
+        self.addLink('r5','h2',intfName2='h2-eth2',params2={ 'ip' :'10.2.3.100/24'},bw = global_bw)
+        self.addLink('r5','h3',bw = global_bw)
+        self.addLink('r6','h3',intfName2='h3-eth2',params2={ 'ip' :'10.3.4.100/24'},bw = global_bw)
+        self.addLink('r6','h4',bw = global_bw)
+        self.addLink('r3','h4',intfName2='h4-eth2',params2={ 'ip' :'10.4.1.100/24'},bw = global_bw)
+        return
 def startRouting(router):
-    router.cmd('zebra -f spine-leaf/%szebra.conf -d -z /tmp/%szebra.api -i /tmp/%szebra.interface' % (router.name, router.name, router.name))
+    router.cmd('zebra -f spine-leaf-5/%szebra.conf -d -z /tmp/%szebra.api -i /tmp/%szebra.interface' % (router.name, router.name, router.name))
     router.waitOutput()
-    router.cmd('bgpd -f spine-leaf/%sbgpd.conf -d -z /tmp/%szebra.api -i /tmp/%sbgpd.interface' % (router.name, router.name, router.name))
+    router.cmd('bgpd -f spine-leaf-5/%sbgpd.conf -d -z /tmp/%szebra.api -i /tmp/%sbgpd.interface' % (router.name, router.name, router.name))
     router.waitOutput()
 def main():
     "Create and test a spine-leaf network"
-    filename = 'data/udp_1Gbps.log'
+    parser = argparse.ArgumentParser(description="Run a spine-leaf network test")
+    parser.add_argument('--bw', '-b',type=int, help='Bandwidth of the links in Mbps', default=1000)
+    args = parser.parse_args()
+    global global_bw
+    global_bw = args.bw
+    filename="data/tcp_arguement.log"
     os.system("rm -f /tmp/r*.api")
     os.system("rm -f /tmp/r*.interface")
     os.system("rm -f /tmp/r*.log")
@@ -99,17 +107,19 @@ def main():
     for router in net.switches:
         router.cmd('sysctl -w net.ipv4.ip_forward=1')
         startRouting(router)
-    time.sleep(30)
+    time.sleep(15)
     h1 = net.getNodeByName('h1')
     h4 = net.getNodeByName('h4')
     # 启动iperf服务器,tcp
     info("*** Starting iperf server on h4\n")
-    h4.cmd('iperf -u -s &')
+    h4.cmd('iperf -s &')
     # 启动iperf客户端,tcp
     info("*** Running iperf client on h1\n")
-    result = h1.cmd('iperf -u -c 10.4.4.100 -b 1000M -t 10')
+    information = "Bandwidth: %dMbps\n" % global_bw 
+    result = h1.cmd('iperf -c 10.4.4.100 -t 10')
     info(result)
-    with open(filename, 'a') as f:
+    with open(filename,'a') as f:
+        f.write(information)
         f.write(result)
     net.stop()
     os.system("killall -9 zebra bgpd")

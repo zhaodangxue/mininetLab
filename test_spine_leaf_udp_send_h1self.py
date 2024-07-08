@@ -89,9 +89,9 @@ def measure_route_table_size(net):
      log("r3 route table size: %d" % r3_route_table_size)
      return r1_route_table_size
 def startRouting(router):
-    router.cmd('zebra -f spine-leaf/%szebra.conf -d -z /tmp/%szebra.api -i /tmp/%szebra.interface' % (router.name, router.name, router.name))
+    router.cmd('zebra -f spine-leaf-5/%szebra.conf -d -z /tmp/%szebra.api -i /tmp/%szebra.interface' % (router.name, router.name, router.name))
     router.waitOutput()
-    router.cmd('bgpd -f spine-leaf/%sbgpd.conf -d -z /tmp/%szebra.api -i /tmp/%sbgpd.interface' % (router.name, router.name, router.name))
+    router.cmd('bgpd -f spine-leaf-5/%sbgpd.conf -d -z /tmp/%szebra.api -i /tmp/%sbgpd.interface' % (router.name, router.name, router.name))
     router.waitOutput()
 def main():
     "Create and test a spine-leaf network"
