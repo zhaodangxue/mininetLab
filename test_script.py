@@ -6,7 +6,7 @@ def main():
     log("copy test code from github")
     python3 = "sudo python3"
     log("run test code")
-    os.system("mkdir data")
+    os.mkdir("data")
     os.system(python3 + " test_spine_leaf_convergence.py -a 5")
     os.system(python3 + " test_spine_leaf_reconnected.py -a 5")
     os.system(python3 + " test_spine_leaf_convergence.py -a 10")
