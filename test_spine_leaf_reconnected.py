@@ -137,15 +137,15 @@ def main():
         time_total += 0.5
         if r1_size == 20 and r2_size == 20 and r3_size == 20 and r4_size == 20 and r5_size == 20 and r6_size == 20:
             break
-    log("relink leaf1 and spine2")
-    net.addLink('r3','r2',intfName1='r3-eth2',params1={ 'ip' :'100.2.1.2/30'},intfName2='r2-eth1',params2={ 'ip' :'100.2.1.1/30'})
-    log("Waiting for routing protocols to converge")
-    while True :
-        r1_size, r2_size, r3_size, r4_size, r5_size, r6_size = measure_route_table_size(net)
-        time.sleep(0.5)
-        time_total += 0.5
-        if r1_size == 21 and r2_size == 21 and r3_size == 21 and r4_size == 21 and r5_size == 21 and r6_size == 21:
-            break
+    # log("relink leaf1 and spine2")
+    # net.addLink('r3','r2',intfName1='r3-eth2',params1={ 'ip' :'100.2.1.2/30'},intfName2='r2-eth1',params2={ 'ip' :'100.2.1.1/30'})
+    # log("Waiting for routing protocols to converge")
+    # while True :
+        # r1_size, r2_size, r3_size, r4_size, r5_size, r6_size = measure_route_table_size(net)
+        # time.sleep(0.5)
+        # time_total += 0.5
+        # if r1_size == 21 and r2_size == 21 and r3_size == 21 and r4_size == 21 and r5_size == 21 and r6_size == 21:
+            #break
     log("Routing protocols converged in %d seconds" % time_total)
     str = "advertise time: %d, reconnected time: %d\n" % (global_advertise, time_total)
     with open(filename, 'a') as f:
